@@ -6,8 +6,7 @@ const clonedInputs = userInputs.firstElementChild as HTMLFormElement;
 clonedInputs.id = "user-input";
 const app: HTMLDivElement = document.querySelector("#app")!;
 app.insertAdjacentElement("afterbegin", clonedInputs);
-//
-//
+
 // ---- FUNCTION TO RENDER PROJECT LIST TEMPLATES ---- //
 function renderProjectListTemplate(
   location: InsertPosition,
@@ -57,14 +56,13 @@ function validateInput(param: Validation): boolean {
   }
   return isValid;
 }
-//
-//
+
 // ---- PROJECT LIST ARRAY AND FUNCTIONS ---- //
 interface Projects {
   title: string;
   description: string;
   people: number;
-  status: string;
+  status: boolean;
 }
 const projects: Projects[] = [];
 
@@ -72,7 +70,7 @@ function addProject(
   title: string,
   description: string,
   people: number,
-  status: "active" | "finished"
+  status: boolean
 ) {
   projects.push({
     title: title,
@@ -82,7 +80,7 @@ function addProject(
   });
 }
 
-function renderListItem(status: "active" | "finished") {
+function renderListItem() {
   // clean UI
   const activeUL = document.querySelector(
     ".active-projects-ul"
@@ -106,7 +104,6 @@ function renderListItem(status: "active" | "finished") {
       true
     );
     const li = importedList.firstElementChild as HTMLLIElement;
-    li.className = project.status;
     li.id = index.toString();
     const h2 = document.createElement("h2");
     h2.innerText = project.title;
@@ -118,32 +115,37 @@ function renderListItem(status: "active" | "finished") {
     li.appendChild(h3);
     li.appendChild(p);
 
-    //
-    project.status === "active"
-      ? activeUL.insertAdjacentElement("afterbegin", li)
-      : finishedUL.insertAdjacentElement("afterbegin", li);
+    if (project.status) {
+      activeUL.insertAdjacentElement("afterbegin", li);
+    } else {
+      finishedUL.insertAdjacentElement("afterbegin", li);
+    }
   });
 }
-//
-//
+
 // ------- DRAG & DROP FUNCTIONS ----- //
-function dragStartHandler(event: DragEvent) {
-  event.currentTarget ? console.log(event.currentTarget!.id) : null;
-  //event.dataTransfer!.setData("text", );
-  event.dataTransfer!.effectAllowed = "move";
+function dragStartHandler(e: DragEvent) {
+  const eTarget = e.target as HTMLLIElement;
+  e.dataTransfer!.setData("text", eTarget.id);
+  e.dataTransfer!.effectAllowed = "move";
+  console.log(e);
 }
-function dragEndHandler(event: DragEvent) {
-  //event.preventDefault();
-  const data = event.dataTransfer!.getData("text");
-  console.log({ event, data });
+function dragEndHandler(e: DragEvent) {
+  //let data = e.dataTransfer!.getData("text");
+  let event = e.target as HTMLLIElement;
+  let id = +event.id;
+  console.log(e);
+  projects[id].status = !projects[id].status;
+  renderListItem();
+  //console.log(projects);
 }
-function dragOverHandler(event: DragEvent) {
-  event.preventDefault();
+function dragOverHandler(e: DragEvent) {
+  e.preventDefault();
   const ul = document.querySelectorAll("ul")!;
   ul.forEach((element) => element.classList.add("droppable"));
 }
-function dragLeaveHandler(event: DragEvent) {
-  event.preventDefault();
+function dragLeaveHandler(e: DragEvent) {
+  e.preventDefault();
   const ul = document.querySelectorAll("ul")!;
   ul.forEach((element) => element.classList.remove("droppable"));
 }
@@ -161,8 +163,7 @@ function implementDragDrop() {
   finishedUl.addEventListener("dragend", dragEndHandler);
 }
 implementDragDrop();
-//
-//
+
 // ---- GETTING USER INPUTS TEXT ---- //
 function handleSubmit(event: Event): void {
   event.preventDefault();
@@ -194,8 +195,8 @@ function handleSubmit(event: Event): void {
     alert("Please enter enter valid information");
     return;
   } else {
-    addProject(title, description, people, "active");
-    renderListItem("active");
+    addProject(title, description, people, true);
+    renderListItem();
   }
 }
 

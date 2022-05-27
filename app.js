@@ -46,7 +46,7 @@ function addProject(title, description, people, status) {
         status: status,
     });
 }
-function renderListItem(status) {
+function renderListItem() {
     const activeUL = document.querySelector(".active-projects-ul");
     const finishedUL = document.querySelector(".finished-projects-ul");
     while (activeUL.firstChild) {
@@ -59,7 +59,6 @@ function renderListItem(status) {
         const singleProjectTemplate = document.querySelector("#single-project");
         const importedList = document.importNode(singleProjectTemplate.content, true);
         const li = importedList.firstElementChild;
-        li.className = project.status;
         li.id = index.toString();
         const h2 = document.createElement("h2");
         h2.innerText = project.title;
@@ -70,26 +69,34 @@ function renderListItem(status) {
         li.appendChild(h2);
         li.appendChild(h3);
         li.appendChild(p);
-        project.status === "active"
-            ? activeUL.insertAdjacentElement("afterbegin", li)
-            : finishedUL.insertAdjacentElement("afterbegin", li);
+        if (project.status) {
+            activeUL.insertAdjacentElement("afterbegin", li);
+        }
+        else {
+            finishedUL.insertAdjacentElement("afterbegin", li);
+        }
     });
 }
-function dragStartHandler(event) {
-    event.currentTarget ? console.log(event.currentTarget.id) : null;
-    event.dataTransfer.effectAllowed = "move";
+function dragStartHandler(e) {
+    const eTarget = e.target;
+    e.dataTransfer.setData("text", eTarget.id);
+    e.dataTransfer.effectAllowed = "move";
+    console.log(e);
 }
-function dragEndHandler(event) {
-    const data = event.dataTransfer.getData("text");
-    console.log({ event, data });
+function dragEndHandler(e) {
+    let event = e.target;
+    let id = +event.id;
+    console.log(e);
+    projects[id].status = !projects[id].status;
+    renderListItem();
 }
-function dragOverHandler(event) {
-    event.preventDefault();
+function dragOverHandler(e) {
+    e.preventDefault();
     const ul = document.querySelectorAll("ul");
     ul.forEach((element) => element.classList.add("droppable"));
 }
-function dragLeaveHandler(event) {
-    event.preventDefault();
+function dragLeaveHandler(e) {
+    e.preventDefault();
     const ul = document.querySelectorAll("ul");
     ul.forEach((element) => element.classList.remove("droppable"));
 }
@@ -131,8 +138,8 @@ function handleSubmit(event) {
         return;
     }
     else {
-        addProject(title, description, people, "active");
-        renderListItem("active");
+        addProject(title, description, people, true);
+        renderListItem();
     }
 }
 clonedInputs.addEventListener("submit", handleSubmit);
